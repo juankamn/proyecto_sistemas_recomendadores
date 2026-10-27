@@ -422,7 +422,10 @@ def _elbow_k(elbow: pd.DataFrame) -> int:
     distances = []
     for k, value in zip(ks, values):
         point = np.array([k, value])
-        distance = np.linalg.norm(np.cross(line, start - point)) / line_norm
+        offset = start - point
+        # Scalar determinant for the 2D cross product; compatible with recent NumPy.
+        cross = line[0] * offset[1] - line[1] * offset[0]
+        distance = abs(cross) / line_norm
         distances.append(distance)
     return int(ks[int(np.argmax(distances))])
 
