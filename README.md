@@ -2,7 +2,20 @@
 
 PlayNow recomienda qué videojuego de tu biblioteca abrir en una sesión concreta. La pregunta que busca resolver es: **«De los juegos que ya tengo disponibles, ¿qué debería jugar ahora?»**
 
-Es un prototipo para el curso Introducción al diseño de sistemas recomendadores de la Maestría en Inteligencia Artificial Aplicada de Icesi. El núcleo usa contenido y similaridad, con apoyo del contexto de la sesión.
+El núcleo del prototipo usa contenido y similaridad, con apoyo del contexto de la sesión.
+
+## Contexto académico
+
+- **Universidad:** Universidad Icesi.
+- **Programa:** Maestría en Inteligencia Artificial Aplicada (MIAA).
+- **Curso:** Introducción al diseño de sistemas recomendadores.
+- **Periodo académico:** 2026-2.
+
+## Equipo de trabajo
+
+- Juan Camilo Macías.
+- Jairo Andrés Valencia Gutiérrez.
+- Ulises Caicedo.
 
 ## Qué incluye
 
@@ -10,7 +23,6 @@ Es un prototipo para el curso Introducción al diseño de sistemas recomendadore
 - Bibliotecas de 15 usuarios simulados, con 109 relaciones usuario-juego.
 - 58 sesiones contextuales y 136 comentarios sintéticos.
 - Motor compartido por un notebook y una demo en Streamlit.
-- Informes de las tres partes del proyecto y diagrama de arquitectura.
 
 ## Datos reales y simulados
 
@@ -28,7 +40,7 @@ Steam, PlayStation Network, Xbox, la agenda y el wearable no están conectados. 
 | `data/` | CSV simulados y generador reproducible. |
 | `notebooks/Prototipo_SR_Videojuegos.ipynb` | Explicación y ejecución del prototipo. |
 | `demo/app_demo.py` | Demo interactiva en Streamlit. |
-| `informe/` | Informes de Parte 1, Parte 2 y Parte 3, y arquitectura. |
+| `tests/` | Pruebas de límites de similitud y de los escenarios de referencia. |
 
 ## Instalación
 
@@ -72,7 +84,19 @@ La demo permite elegir un perfil y explorar tres escenarios: una sesión corta p
 
 El motor parte de los juegos de la biblioteca del usuario. Compara el vector de la intención con los atributos de cada juego mediante similitud coseno y cercanía en el plano de valencia y activación de Russell. La lógica difusa combina minutos disponibles y fatiga para estimar la carga admisible. El ranking incorpora viabilidad, reenganche y, cuando hay evidencia, una señal de vecinos del mismo perfil ocupacional.
 
+La cercanía de Russell usa `1 - distancia / (2 * sqrt(2))`, acotada a `[0, 1]`. Después de combinarla con el coseno, el ajuste de reenganche se calcula como `clip(similitud_base - penalizacion, 0, 1)`. Un valor negativo de la penalización actúa como bono y el resultado sigue limitado a 1.
+
 PCA y K-Means sirven como análisis auxiliar de familias de juegos. Los clústeres no determinan el orden de las recomendaciones.
+
+## Pruebas
+
+Con el entorno activado, ejecuta:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Las pruebas comprueban los extremos del plano de Russell, los límites del reenganche, los Top 3 y puntajes de referencia, y las recomendaciones de los 15 perfiles en los tres contextos.
 
 ## Limitaciones
 

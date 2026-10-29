@@ -1,7 +1,8 @@
-"""Build the simulated PlayNow datasets.
+"""Generación del catálogo, las bibliotecas y el historial simulado de PlayNow.
 
-Titles are real games. Deep attributes are design estimates for the prototype,
-not laboratory measurements. Forum comments are synthetic.
+Los videojuegos existen, pero sus atributos son estimaciones para representar
+distintas experiencias de juego. Los perfiles, las sesiones y los comentarios
+también se construyen aquí, sin consultar plataformas ni reseñas reales.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from pathlib import Path
 
 import pandas as pd
 
+# La raíz del proyecto permite importar el motor al ejecutar este archivo desde data.
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -19,8 +21,12 @@ from playnow.engine import SEED, aggregate_lexicon, russell_quadrant  # noqa: E4
 
 DATA = Path(__file__).resolve().parent
 
-# id, title, genre, indie, time_to_fun, save_every, min_session, pause,
-# reengage, cognitive, motor, narrative, valence, arousal, tilt, mu_r, mu_l, mu_h, mu_c, mode, mic
+# Cada fila se convierte en una ficha con el orden indicado en COLUMNS:
+# identificación, título, género e indicador indie; minutos hasta la diversión,
+# intervalo de guardado, sesión mínima y facilidad de pausa; costo de retomar,
+# carga cognitiva, exigencia motora y narrativa; valencia, activación y frustración;
+# adecuación a relajación, partida ligera, historia y reto; modalidad y micrófono.
+# Los grados de adecuación y las cargas van de 0 a 1; valencia y activación, de -1 a 1.
 GAMES = [
     ("hades", "Hades", "roguelike", 1, 3, 12, 20, 0.55, 0.15, 0.45, 0.80, 0.35, 0.35, 0.75, 0.45, 0.10, 0.35, 0.25, 0.90, "Solo", 0),
     ("stardew", "Stardew Valley", "simulacion", 1, 5, 15, 20, 0.95, 0.10, 0.25, 0.10, 0.30, 0.70, -0.55, 0.05, 0.90, 0.55, 0.20, 0.05, "Solo", 0),
@@ -94,7 +100,9 @@ GAMES = [
 
 
 def _comment(game: dict) -> str:
+    """Redacta un comentario simulado a partir de las características del juego."""
     chunks = []
+    # Se elige una frase de uso según la carga, la activación y la sesión mínima.
     if game["carga_cognitiva"] <= 0.35 and game["arousal"] <= 0.15 and game["duracion_minima_sesion_min"] <= 25:
         chunks.append(
             "Ideal después del trabajo, partida corta para desconectar cuando llego cansado, sin pensar mucho."
@@ -105,6 +113,7 @@ def _comment(game: dict) -> str:
         )
     else:
         chunks.append("Se puede abrir un rato, aunque no es la opción más suave.")
+    # Se añaden observaciones sobre volver al juego y sobre la frustración prevista.
     if game["costo_reenganche"] >= 0.55:
         chunks.append("Si lo dejas olvidas los controles, cuesta retomar y pierdes el hilo de la trama.")
     else:
@@ -117,6 +126,7 @@ def _comment(game: dict) -> str:
 
 
 def _variant(game: dict) -> str:
+    """Crea una segunda versión del comentario con una observación sobre la historia."""
     if game["densidad_narrativa"] >= 0.75:
         story = "La historia pide atención y no es una partida corta."
     else:
@@ -124,6 +134,7 @@ def _variant(game: dict) -> str:
     return _comment(game) + " " + story
 
 
+# Nombres de las columnas, en el mismo orden que los valores de cada fila de GAMES.
 COLUMNS = [
     "game_id",
     "titulo",
@@ -150,6 +161,7 @@ COLUMNS = [
 
 
 def catalog_frame() -> pd.DataFrame:
+    """Convierte las filas de videojuegos en un catálogo con su origen identificado."""
     rows = []
     for raw in GAMES:
         record = dict(zip(COLUMNS, raw))
@@ -160,6 +172,7 @@ def catalog_frame() -> pd.DataFrame:
 
 
 def comments_frame(catalog: pd.DataFrame) -> pd.DataFrame:
+    """Genera dos comentarios por juego y los identifica como texto sintético."""
     rows = []
     for game in catalog.to_dict(orient="records"):
         for index, text in enumerate((_comment(game), _variant(game)), start=1):
@@ -174,6 +187,8 @@ def comments_frame(catalog: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+# Biblioteca de Andrés, el perfil usado para comparar los escenarios.
+# Cada par indica las horas jugadas y los días desde la última sesión.
 LIBRARY_U01 = {
     "hades": (140, 2),
     "stardew": (36, 1),
@@ -197,6 +212,7 @@ LIBRARY_U01 = {
 
 
 def _users() -> pd.DataFrame:
+    """Define personas simuladas, su perfil, juego refugio y pulso habitual."""
     rows = [
         ("U01", "Andres", "alta_carga", "stardew", 64),
         ("U02", "Laura", "alta_carga", "coffee", 60),
@@ -221,7 +237,9 @@ def _users() -> pd.DataFrame:
 
 
 def _libraries(catalog: pd.DataFrame) -> pd.DataFrame:
+    """Asigna a cada persona sus juegos, horas acumuladas y días sin jugar."""
     all_ids = catalog["game_id"].tolist()
+    # Las primeras bibliotecas se definen a mano para representar usos distintos.
     assignments = {
         "U01": LIBRARY_U01,
         "U02": {
@@ -294,11 +312,13 @@ def _libraries(catalog: pd.DataFrame) -> pd.DataFrame:
             "tetris": (3, 6),
         },
     }
+    # Las cinco bibliotecas restantes se sortean con una semilla fija.
     rng_py = random.Random(SEED)
     extra_users = ["U11", "U12", "U13", "U14", "U15"]
     for user_id in extra_users:
         picks = rng_py.sample(all_ids, 8)
         assignments[user_id] = {game_id: (rng_py.randint(0, 40), rng_py.randint(0, 30)) for game_id in picks}
+    # Se guarda una fila por relación persona-juego para facilitar los cruces.
     rows = []
     for user_id, games in assignments.items():
         for game_id, (hours, days) in games.items():
@@ -314,10 +334,12 @@ def _libraries(catalog: pd.DataFrame) -> pd.DataFrame:
 
 
 def _sessions(library: pd.DataFrame, users: pd.DataFrame) -> pd.DataFrame:
+    """Construye sesiones de ejemplo con duración, señales simuladas y cierre."""
     rng = random.Random(SEED)
     rows = []
     session_id = 1
-    # Fixed examples so the occupational-neighbor term has something to read.
+    # Estos ejemplos dan al componente de vecinos sesiones repetidas por juego
+    # con las que calcular satisfacción y formas de cierre.
     example_sessions = [
         ("U02", "unpacking", "GUARDADO_FIN_NATURAL", 5, 30, 78, 32, 5.5),
         ("U02", "unpacking", "GUARDADO_FIN_NATURAL", 5, 28, 80, 30, 6.0),
@@ -346,6 +368,8 @@ def _sessions(library: pd.DataFrame, users: pd.DataFrame) -> pd.DataFrame:
         )
         session_id += 1
 
+    # Se agregan sesiones para una muestra de relaciones con horas jugadas.
+    # El perfil define las probabilidades de cierre y la satisfacción simulada.
     for record in library.itertuples(index=False):
         if record.horas_jugadas <= 0 or rng.random() > 0.35:
             continue
@@ -378,6 +402,7 @@ def _sessions(library: pd.DataFrame, users: pd.DataFrame) -> pd.DataFrame:
 
 
 def _session_row(session_id, user_id, game_id, minutes_played, hr, hrv, sleep, event, satisfaction, origin) -> dict:
+    """Arma una fila de sesión con los campos usados por el motor y el cuaderno."""
     return {
         "session_id": f"S{session_id:03d}",
         "user_id": user_id,
@@ -387,7 +412,8 @@ def _session_row(session_id, user_id, game_id, minutes_played, hr, hrv, sleep, e
         "minutos_jugados": minutes_played,
         "hr": hr,
         "hrv": hrv,
-        # Proxy derived from HRV. There is no separate skin-conductance sensor.
+        # El campo llamado gsr se calcula desde HRV; no representa una lectura
+        # independiente de conductancia de la piel, aunque conserve ese nombre.
         "gsr": round(max(0.1, (90 - hrv) / 80), 3),
         "horas_sueno": sleep,
         "evento_cierre": event,
@@ -397,20 +423,24 @@ def _session_row(session_id, user_id, game_id, minutes_played, hr, hrv, sleep, e
 
 
 def main() -> None:
+    """Genera las cinco tablas y reemplaza los CSV de la carpeta de datos."""
     catalog = catalog_frame()
     comments = comments_frame(catalog)
+    # El léxico convierte los comentarios en puntajes y los agrega al catálogo.
     lexicon = aggregate_lexicon(comments)
     catalog = catalog.drop(columns=[c for c in ("score_post_trabajo", "score_juego_confort", "score_facil_retomar") if c in catalog.columns])
     catalog = catalog.merge(lexicon, on="game_id", how="left")
+    # Primero se definen personas y bibliotecas; después se construye el historial.
     users = _users()
     library = _libraries(catalog)
     sessions = _sessions(library, users)
+    # Cada tabla se guarda sin el índice de pandas: sus identificadores ya son columnas.
     catalog.to_csv(DATA / "catalogo_videojuegos_profundo.csv", index=False)
     comments.to_csv(DATA / "comentarios_foros_videojuegos.csv", index=False)
     users.to_csv(DATA / "usuarios_perfiles_ocupacionales.csv", index=False)
     library.to_csv(DATA / "biblioteca_usuario.csv", index=False)
     sessions.to_csv(DATA / "sesiones_contextuales_wearable.csv", index=False)
-    print(f"games={len(catalog)} comments={len(comments)} users={len(users)} library={len(library)} sessions={len(sessions)}")
+    print(f"juegos={len(catalog)} comentarios={len(comments)} usuarios={len(users)} relaciones_biblioteca={len(library)} sesiones={len(sessions)}")
 
 
 if __name__ == "__main__":

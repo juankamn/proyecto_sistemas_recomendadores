@@ -1,4 +1,4 @@
-"""PlayNow: contextual recommender over a player's owned library."""
+"""PlayNow: recomendaciones según el contexto y la biblioteca de cada persona."""
 
 from playnow.engine import PlayNowEngine
 
