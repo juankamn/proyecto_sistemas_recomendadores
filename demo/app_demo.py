@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from playnow.engine import INTENTION_TARGETS, PlayNowEngine, fatigue_from_wearable
+from playnow.personal_case import personal_case_data
 
 DATA = ROOT / "data"
 
@@ -30,8 +31,8 @@ PRESETS = {
     "Viernes 20:00, reto": {"minutes": 50, "hr": 78, "hrv": 40, "sleep": 6.5, "intention": "reto"},
 }
 
-# El modo final usa el escenario nocturno: el contexto llega de las integraciones simuladas.
-FINAL_CONTEXT = {"user_id": "U01", **PRESETS["Martes 21:30, relajarme"]}
+# El modo final ilustra el caso personal: disponibilidad y fatiga declaradas.
+FINAL_CONTEXT = {"user_id": "JA01", "minutes": 60, "fatigue": 25, "intention": "ligero"}
 
 
 @st.cache_resource
@@ -41,6 +42,13 @@ def load_engine() -> tuple[PlayNowEngine, pd.DataFrame]:
     library = pd.read_csv(DATA / "biblioteca_usuario.csv")
     users = pd.read_csv(DATA / "usuarios_perfiles_ocupacionales.csv")
     sessions = pd.read_csv(DATA / "sesiones_contextuales_wearable.csv")
+    return PlayNowEngine(catalog, library, users, sessions), users
+
+
+@st.cache_resource
+def load_personal_engine() -> tuple[PlayNowEngine, pd.DataFrame]:
+    """Prepara el caso personal sin modificar los datos académicos."""
+    catalog, library, users, sessions = personal_case_data()
     return PlayNowEngine(catalog, library, users, sessions), users
 
 
@@ -167,17 +175,14 @@ def compact_table(frame: pd.DataFrame, columns: list[str], labels: dict[str, str
 def final_experience(engine: PlayNowEngine, users: pd.DataFrame) -> None:
     """Muestra la experiencia final con una única pregunta explícita."""
     profile = users.loc[users["user_id"] == FINAL_CONTEXT["user_id"]].iloc[0]
-    baseline_hr = float(profile["hr_baseline"])
-    fatigue = fatigue_from_wearable(
-        FINAL_CONTEXT["hr"], FINAL_CONTEXT["hrv"], FINAL_CONTEXT["sleep"], baseline_hr
-    )
+    fatigue = float(FINAL_CONTEXT["fatigue"])
 
     st.markdown(
         """
         <section class="hero">
           <div class="eyebrow">Tu biblioteca, en el momento justo</div>
           <h1>¿A qué jugamos hoy?</h1>
-          <p>PlayNow revisó tu tiempo disponible y el contexto de tu sesión para encontrar algo que encaje contigo.</p>
+          <p>PlayNow combina tu biblioteca, el tiempo disponible y el contexto de esta sesión para encontrar algo que encaje contigo.</p>
         </section>
         """,
         unsafe_allow_html=True,
@@ -187,12 +192,12 @@ def final_experience(engine: PlayNowEngine, users: pd.DataFrame) -> None:
     context_left, context_right = st.columns(2)
     with context_left:
         st.markdown(
-            f"<div class='context-card'><span><strong>Contexto listo.</strong> Esta noche tienes {FINAL_CONTEXT['minutes']} minutos libres y tu biblioteca ya está sincronizada.</span></div>",
+            f"<div class='context-card'><span><strong>Contexto listo.</strong> Hoy tienes {FINAL_CONTEXT['minutes']} minutos libres y tus 53 juegos están disponibles.</span></div>",
             unsafe_allow_html=True,
         )
     with context_right:
         st.markdown(
-            f"<div class='context-card'><span><strong>Ritmo de hoy.</strong> Fatiga estimada: {fatigue:.0f}/100.</span></div>",
+            "<div class='context-card'><span><strong>Ritmo de hoy.</strong> Fatiga declarada: 2/5. Sin wearable en esta simulación.</span></div>",
             unsafe_allow_html=True,
         )
 
@@ -236,7 +241,12 @@ def final_experience(engine: PlayNowEngine, users: pd.DataFrame) -> None:
     recommendation_cards(ranking)
 
 
-def advanced_experience(engine: PlayNowEngine, users: pd.DataFrame) -> None:
+def advanced_experience(
+    engine: PlayNowEngine,
+    users: pd.DataFrame,
+    personal_engine: PlayNowEngine,
+    personal_users: pd.DataFrame,
+) -> None:
     """Conserva los controles del prototipo en una presentación más ordenada."""
     st.markdown("<div class='eyebrow'>Vista de exploración</div>", unsafe_allow_html=True)
     st.markdown("# PlayNow avanzado")
@@ -246,35 +256,61 @@ def advanced_experience(engine: PlayNowEngine, users: pd.DataFrame) -> None:
         apply_preset("Martes 21:30, relajarme")
 
     names = {row.user_id: f"{row.nombre} ({row.perfil_ocupacional})" for row in users.itertuples(index=False)}
+    standard_user_ids = list(names)
+    names["JA01"] = "Jairo (caso personal)"
     with st.sidebar:
         st.markdown("## Configurar sesión")
-        user_id = st.selectbox("Persona", list(names), format_func=lambda key: names[key])
-        st.markdown("### Escenarios rápidos")
-        for name in PRESETS:
-            st.button(name, on_click=apply_preset, args=(name,), width="stretch")
-        st.markdown("### Señales simuladas")
-        minutes = st.slider("Minutos libres", min_value=10, max_value=240, key="minutes")
-        hr = st.slider("Frecuencia cardíaca", min_value=50, max_value=120, key="hr")
-        hrv = st.slider("HRV", min_value=15, max_value=80, key="hrv")
-        sleep = st.slider("Horas de sueño", min_value=3.0, max_value=9.0, step=0.5, key="sleep")
-        intention = st.radio(
-            "¿Qué te provoca jugar hoy?",
-            list(INTENTION_TARGETS),
-            format_func=lambda key: INTENTION_TARGETS[key]["label"],
-            key="intention",
-        )
+        selected_user = st.selectbox("Persona", ["JA01", *standard_user_ids], format_func=lambda key: names[key])
+        is_personal_case = selected_user == "JA01"
+        active_engine = personal_engine if is_personal_case else engine
+        active_users = personal_users if is_personal_case else users
+        user_id = selected_user
+        if is_personal_case:
+            st.caption("Caso personal separado de los datos y resultados académicos.")
+        if is_personal_case:
+            st.markdown("### Contexto personal")
+            minutes = st.slider("Minutos libres", min_value=10, max_value=240, value=60, key="personal_minutes")
+            fatigue_level = st.slider("Fatiga declarada (1 = baja, 5 = alta)", min_value=1, max_value=5, value=2, key="personal_fatigue")
+            intention = st.radio(
+                "¿Qué te provoca jugar hoy?",
+                list(INTENTION_TARGETS),
+                index=list(INTENTION_TARGETS).index("ligero"),
+                format_func=lambda key: INTENTION_TARGETS[key]["label"],
+                key="personal_intention",
+            )
+        else:
+            st.markdown("### Escenarios rápidos")
+            for name in PRESETS:
+                st.button(name, on_click=apply_preset, args=(name,), width="stretch")
+            st.markdown("### Señales simuladas")
+            minutes = st.slider("Minutos libres", min_value=10, max_value=240, key="minutes")
+            hr = st.slider("Frecuencia cardíaca", min_value=50, max_value=120, key="hr")
+            hrv = st.slider("HRV", min_value=15, max_value=80, key="hrv")
+            sleep = st.slider("Horas de sueño", min_value=3.0, max_value=9.0, step=0.5, key="sleep")
+            intention = st.radio(
+                "¿Qué te provoca jugar hoy?",
+                list(INTENTION_TARGETS),
+                format_func=lambda key: INTENTION_TARGETS[key]["label"],
+                key="intention",
+            )
 
-    profile = users.loc[users["user_id"] == user_id].iloc[0]
-    baseline_hr = float(profile["hr_baseline"])
-    fatigue = fatigue_from_wearable(hr, hrv, sleep, baseline_hr)
-    ranking = engine.rank(user_id, minutes, fatigue, intention)
-    baseline = engine.baseline(user_id)
-    metrics = engine.list_metrics(ranking)
+    profile = active_users.loc[active_users["user_id"] == user_id].iloc[0]
+    if is_personal_case:
+        fatigue = float((fatigue_level - 1) * 25)
+    else:
+        baseline_hr = float(profile["hr_baseline"])
+        fatigue = fatigue_from_wearable(hr, hrv, sleep, baseline_hr)
+    ranking = active_engine.rank(user_id, minutes, fatigue, intention)
+    baseline = active_engine.baseline(user_id)
+    metrics = active_engine.list_metrics(ranking)
     load = float(ranking.iloc[0]["carga_max"]) if len(ranking) else 0.0
 
     platform_badges()
     st.markdown(f"<div class='section-title'>Sesión de {html.escape(str(profile['nombre']))}</div>", unsafe_allow_html=True)
-    st.caption("Las señales son simuladas para poder comparar escenarios del prototipo.")
+    if is_personal_case:
+        st.caption("Biblioteca personal y atributos de diseño estimados. La fatiga se simula mientras no haya wearable.")
+    else:
+        st.caption("Las señales son simuladas para poder comparar escenarios del prototipo.")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Perfil", str(profile["perfil_ocupacional"]).replace("_", " "))
     c2.metric("Fatiga estimada", f"{fatigue:.0f}/100")
@@ -319,6 +355,7 @@ def main() -> None:
     st.set_page_config(page_title="PlayNow", page_icon="🎮", layout="wide")
     inject_style()
     engine, users = load_engine()
+    personal_engine, personal_users = load_personal_engine()
 
     # Dos botones de navegación evitan los colores y los indicadores por defecto
     # de un selector, y permiten ocultar los controles técnicos en la vista final.
@@ -336,9 +373,9 @@ def main() -> None:
 
     view = st.session_state["demo_view"]
     if view == "final":
-        final_experience(engine, users)
+        final_experience(personal_engine, personal_users)
     else:
-        advanced_experience(engine, users)
+        advanced_experience(engine, users, personal_engine, personal_users)
 
 
 if __name__ == "__main__":
