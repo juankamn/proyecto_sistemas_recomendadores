@@ -71,47 +71,51 @@ def inject_style() -> None:
                 --violet: #9c72ff; --cyan: #4de1ff; --lime: #c4ff73; }
         .stApp { background: radial-gradient(circle at 15% 0%, #223b76 0, transparent 28%),
                            radial-gradient(circle at 94% 12%, #3d216d 0, transparent 24%), var(--navy); color: var(--ink); }
-        [data-testid="stHeader"] { background: rgba(8, 18, 37, .96); border-bottom: 1px solid rgba(184, 192, 221, .12); }
-        [data-testid="stHeader"] * { color: var(--ink) !important; }
+        [data-testid="stHeader"] { display: none; }
         [data-testid="stSidebar"] { background: #0c1931; border-right: 1px solid rgba(184, 192, 221, .15); }
         [data-testid="stSidebar"] * { color: var(--ink); }
         [data-testid="stMetric"] { background: rgba(23, 41, 80, .88); border: 1px solid rgba(184, 192, 221, .16);
                                    border-radius: 16px; padding: 14px; }
         [data-testid="stMetricLabel"] p, [data-testid="stMetricValue"] { color: var(--ink) !important; }
+        [data-testid="stMainBlockContainer"] { padding-top: 1rem; padding-bottom: 1rem; }
         .stButton > button { border: 1px solid rgba(77, 225, 255, .58); border-radius: 13px; color: #fff !important;
-                             background: linear-gradient(120deg, #294d8e, #513183); font-weight: 720; min-height: 52px; }
+                             background: linear-gradient(120deg, #294d8e, #513183); font-weight: 720; min-height: 46px; }
         .stButton > button:hover { border-color: var(--lime); background: linear-gradient(120deg, #3968b6, #6743a5); color: #fff !important; }
         .stButton > button[kind="primary"] { border-color: var(--lime); background: linear-gradient(120deg, #527c2c, #627432); box-shadow: 0 0 0 3px rgba(196, 255, 115, .16); }
         .stButton > button:disabled { color: #dce4fa !important; opacity: 1; cursor: default; }
-        .hero { padding: 34px; margin: 10px 0 22px; border: 1px solid rgba(123, 147, 229, .33); border-radius: 24px;
+        .hero { padding: 23px 28px; margin: 6px 0 14px; border: 1px solid rgba(123, 147, 229, .33); border-radius: 22px;
                 background: linear-gradient(125deg, rgba(31, 62, 123, .9), rgba(77, 43, 132, .82)); }
         .eyebrow { color: var(--lime); font-size: .78rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
-        .hero h1 { margin: .25rem 0 .45rem; color: #fff; font-size: clamp(2.25rem, 5vw, 4.3rem); letter-spacing: -.06em; }
-        .hero p { color: #dce6ff; font-size: 1.1rem; max-width: 700px; margin-bottom: 0; }
-        .platforms { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 20px; }
+        .hero h1 { margin: .2rem 0 .3rem; color: #fff; font-size: clamp(2rem, 3.5vw, 3.35rem); letter-spacing: -.05em; }
+        .hero p { color: #dce6ff; font-size: 1rem; max-width: 760px; margin-bottom: 0; }
+        .platforms { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 12px; }
         .platform { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px;
                     background: rgba(7, 15, 34, .5); border: 1px solid rgba(238, 242, 255, .18); color: #fff; font-weight: 650; }
         .platform img { height: 18px; width: 18px; }
-        .context-card { min-height: 84px; box-sizing: border-box; padding: 18px 20px; border-radius: 16px; background: rgba(17, 31, 60, .94);
+        .switch-mark { width: 18px; height: 18px; flex: 0 0 18px; }
+        .context-card { min-height: 66px; box-sizing: border-box; padding: 12px 18px; border-radius: 15px; background: rgba(17, 31, 60, .94);
                         border: 1px solid rgba(184, 192, 221, .24); color: var(--muted); line-height: 1.55;
                         display: flex; align-items: center; justify-content: center; text-align: center; }
         .context-card span { display: block; }
         .context-card strong { color: var(--ink); }
-        .choice-label { margin: 28px 0 10px; color: var(--lime); font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+        .choice-label { margin: 18px 0 5px; color: var(--lime); font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
         .game-card { min-height: 272px; box-sizing: border-box; padding: 24px; border-radius: 20px; border: 1px solid rgba(184, 192, 221, .25);
                      background: linear-gradient(150deg, rgba(29, 54, 102, .98), rgba(13, 28, 57, .98)); display: flex; flex-direction: column; }
         .game-card.featured { border-color: rgba(64, 217, 255, .72); box-shadow: 0 12px 35px rgba(0, 0, 0, .22); }
+        .game-card.compact { min-height: 130px; padding: 14px 20px; }
+        .game-card.compact h3 { font-size: 1.25rem; margin: 6px 0 8px; }
+        .game-card.compact p { min-height: 0; margin-bottom: 8px; font-size: .92rem; line-height: 1.42; }
+        .game-card.compact .score { font-size: 1rem; }
         .game-rank { color: var(--cyan); font-weight: 800; font-size: .8rem; letter-spacing: .09em; }
         .game-card h3 { color: white; font-size: 1.45rem; margin: 10px 0 12px; }
         .game-card p { color: #edf1ff; line-height: 1.65; margin: 2px 0 18px; }
         .score { color: var(--lime); font-size: 1.2rem; font-weight: 800; margin-top: auto; }
-        .section-title { color: #fff; font-size: 1.55rem; font-weight: 750; margin: 30px 0 4px; }
+        .section-title { color: #fff; font-size: 1.35rem; font-weight: 750; margin: 18px 0 2px; }
         .section-copy { color: var(--muted); margin: 0 0 16px; }
-        .awaiting-choice { margin-top: 32px; min-height: 120px; display: flex; align-items: center; justify-content: center;
-                            color: #cbd7f4; border: 1px dashed rgba(77, 225, 255, .42); border-radius: 20px;
-                            background: rgba(12, 27, 55, .45); font-size: 1.04rem; text-align: center; padding: 20px; }
-        .selected-answer { margin: 24px 0 18px; padding: 15px 18px; border: 1px solid rgba(196, 255, 115, .65);
+        .selected-answer { margin: 14px 0 10px; padding: 13px 18px; border: 1px solid rgba(196, 255, 115, .65);
                            border-radius: 14px; background: rgba(95, 126, 48, .18); color: #efffd7; text-align: center; }
+        .session-strip { margin: 10px 0 12px; padding: 11px 16px; border-radius: 14px; color: #dce8ff;
+                         background: rgba(21, 43, 84, .90); border: 1px solid rgba(77, 225, 255, .28); text-align: center; }
         .table-wrap { margin-top: 12px; overflow-x: auto; border: 1px solid rgba(184, 192, 221, .24); border-radius: 16px; }
         .data-table { width: 100%; border-collapse: collapse; background: rgba(14, 29, 59, .94); color: #f4f7ff; }
         .data-table th { padding: 12px 14px; color: #baf7ff; font-size: .78rem; text-align: left; letter-spacing: .04em; text-transform: uppercase; background: rgba(40, 74, 136, .62); }
@@ -131,23 +135,30 @@ def platform_badges() -> None:
           <span class="platform"><img src="https://cdn.simpleicons.org/playstation/ffffff" alt="">PlayStation</span>
           <span class="platform"><img src="https://imagedelivery.net/5MYSbk45M80qAwecrlKzdQ/88a8cf15-5116-48ff-2889-6ad183a3a400/preview" alt="">Xbox</span>
           <span class="platform"><img src="https://cdn.simpleicons.org/steam/ffffff" alt="">Steam</span>
+          <span class="platform"><svg class="switch-mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5" fill="#e60012"/><path d="M11.25 4.2H7.9a3.1 3.1 0 0 0-3.1 3.1v9.4a3.1 3.1 0 0 0 3.1 3.1h3.35V4.2Zm-3.4 7.8a1.55 1.55 0 1 1 0-3.1 1.55 1.55 0 0 1 0 3.1Z" fill="#fff"/><path d="M12.75 4.2v15.6h3.35a3.1 3.1 0 0 0 3.1-3.1V7.3a3.1 3.1 0 0 0-3.1-3.1h-3.35Zm3.4 10.9a1.55 1.55 0 1 1 0-3.1 1.55 1.55 0 0 1 0 3.1Z" fill="#fff"/></svg>Nintendo Switch</span>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-def recommendation_cards(ranking: pd.DataFrame) -> None:
-    """Presenta los tres primeros resultados en tarjetas fáciles de recorrer."""
-    cards = st.columns(3)
-    for position, (column, row) in enumerate(zip(cards, ranking.head(3).itertuples(index=False)), start=1):
+def recommendation_cards(ranking: pd.DataFrame, limit: int = 3, compact: bool = False) -> None:
+    """Presenta los resultados principales en tarjetas fáciles de recorrer."""
+    top = ranking.head(limit)
+    if limit == 1:
+        cards = [st.container()]
+    else:
+        cards = st.columns(limit)
+    for position, (column, row) in enumerate(zip(cards, top.itertuples(index=False)), start=1):
         title = html.escape(str(row.titulo))
         explanation = html.escape(str(row.explicacion))
-        featured = " featured" if position == 1 else ""
+        classes = " featured" if position == 1 else ""
+        if compact:
+            classes += " compact"
         with column:
             st.markdown(
                 f"""
-                <article class="game-card{featured}">
+                <article class="game-card{classes}">
                     <div class="game-rank">{position:02d} · PARA ESTA SESIÓN</div>
                     <h3>{title}</h3>
                     <p>{explanation}</p>
@@ -176,35 +187,41 @@ def final_experience(engine: PlayNowEngine, users: pd.DataFrame) -> None:
     """Muestra la experiencia final con una única pregunta explícita."""
     profile = users.loc[users["user_id"] == FINAL_CONTEXT["user_id"]].iloc[0]
     fatigue = float(FINAL_CONTEXT["fatigue"])
+    selected = st.session_state.get("final_intention")
 
-    st.markdown(
-        """
-        <section class="hero">
-          <div class="eyebrow">Tu biblioteca, en el momento justo</div>
-          <h1>¿A qué jugamos hoy?</h1>
-          <p>PlayNow combina tu biblioteca, el tiempo disponible y el contexto de esta sesión para encontrar algo que encaje contigo.</p>
-        </section>
-        """,
-        unsafe_allow_html=True,
-    )
-    platform_badges()
-
-    context_left, context_right = st.columns(2)
-    with context_left:
+    if selected is None:
         st.markdown(
-            f"<div class='context-card'><span><strong>Contexto listo.</strong> Hoy tienes {FINAL_CONTEXT['minutes']} minutos libres y tus 53 juegos están disponibles.</span></div>",
+            """
+            <section class="hero">
+              <div class="eyebrow">Tu biblioteca, en el momento justo</div>
+              <h1>¿A qué jugamos hoy?</h1>
+              <p>PlayNow combina tu biblioteca, el tiempo disponible y el contexto de esta sesión para encontrar algo que encaje contigo.</p>
+            </section>
+            """,
             unsafe_allow_html=True,
         )
-    with context_right:
+        platform_badges()
+
+        context_left, context_right = st.columns(2)
+        with context_left:
+            st.markdown(
+                f"<div class='context-card'><span><strong>Contexto listo.</strong> Hoy tienes {FINAL_CONTEXT['minutes']} minutos libres y tus 53 juegos están disponibles.</span></div>",
+                unsafe_allow_html=True,
+            )
+        with context_right:
+            st.markdown(
+                "<div class='context-card'><span><strong>Ritmo de hoy.</strong> Fatiga declarada: 2/5. Sin wearable en esta simulación.</span></div>",
+                unsafe_allow_html=True,
+            )
+    else:
         st.markdown(
-            "<div class='context-card'><span><strong>Ritmo de hoy.</strong> Fatiga declarada: 2/5. Sin wearable en esta simulación.</span></div>",
+            f"<div class='session-strip'><strong>Sesión de Jairo:</strong> {FINAL_CONTEXT['minutes']} min · fatiga declarada 2/5 · 53 juegos disponibles</div>",
             unsafe_allow_html=True,
         )
 
     st.markdown("<div class='choice-label'>Una sola pregunta para empezar</div>", unsafe_allow_html=True)
     st.markdown("## ¿Qué te provoca jugar hoy?")
     choices = list(INTENTION_TARGETS)
-    selected = st.session_state.get("final_intention")
     choice_columns = st.columns(len(choices))
     for column, key in zip(choice_columns, choices):
         with column:
@@ -219,10 +236,6 @@ def final_experience(engine: PlayNowEngine, users: pd.DataFrame) -> None:
                 st.rerun()
 
     if selected is None:
-        st.markdown(
-            "<div class='awaiting-choice'>Elige una opción para descubrir qué juego encaja mejor con esta sesión.</div>",
-            unsafe_allow_html=True,
-        )
         return
 
     st.markdown(
@@ -235,10 +248,9 @@ def final_experience(engine: PlayNowEngine, users: pd.DataFrame) -> None:
             del st.session_state["final_intention"]
             st.rerun()
 
-    st.markdown("<div class='section-title'>Tu mejor sesión empieza aquí</div>", unsafe_allow_html=True)
-    st.markdown("<p class='section-copy'>Estas opciones salen únicamente de tu biblioteca.</p>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>Tu sugerencia para ahora</div>", unsafe_allow_html=True)
     ranking = engine.rank(FINAL_CONTEXT["user_id"], FINAL_CONTEXT["minutes"], fatigue, selected)
-    recommendation_cards(ranking)
+    recommendation_cards(ranking, limit=1, compact=True)
 
 
 def advanced_experience(
